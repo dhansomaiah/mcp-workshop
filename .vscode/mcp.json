@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "component-workshop": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["server.py"]
+    }
+  }
+}
