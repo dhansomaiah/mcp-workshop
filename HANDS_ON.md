@@ -4,46 +4,57 @@
 
 1. Open the **Chat** panel on the right of your Codespace.
 2. Set the mode selector at the bottom to **Agent**.
-3. Click the **tools icon** in the chat input area. You should see two tools from `component-workshop`:
-   - `lookup_component`
-   - `list_ntcs_for_component`
-4. Ask Copilot in chat:
+3. Click the **tools icon** in the chat input area. Uncheck every tool EXCEPT the three under `component-workshop` — this stops Copilot from cheating by reading the CSV file or grepping the workspace.
+4. Click **New Chat** (top of the panel) so we start with no prior conversation memory.
+5. Ask Copilot in chat:
    > **who owns component CM101A?**
 
-   Expected: Copilot calls `lookup_component` and answers with something like *"CM101A (MotAgCorrln) is owned by Dave Smith, in the Motor Control family, EPS subsystem."*
+   Expected: Copilot calls `lookup_component` and answers with something like *"CM101A (MotAgCorrln) is owned by Dave Smith, Motor Control family, EPS subsystem."*
 
 That's the entire loop. The two tasks below are small edits to it.
 
 ---
 
-## Task 1 — Relabel a drawer (~5 min)
+## Task 1 — Relabel the drawer (~5 min)
 
-Every tool has a description string. Copilot reads it when deciding whether to call the tool. It is the label taped to the drawer.
+Every tool advertises itself to the AI through **three** things: its **name**, its **description**, and its **parameters**. Copilot reads all three to decide which tool to call. Change any one badly and Copilot may pick a different tool — or none at all.
 
-Open `server.py`. Find the `lookup_component` function and change the **first line** of its docstring:
+Open `server.py`. Rename `lookup_component` and rewrite its docstring so it looks like an HR tool:
 
 **Before:**
 ```python
-"""Look up a component by its ID (e.g. CM101A, ES249B, AR200A).
-..."""
+@mcp.tool()
+def lookup_component(component_id: str) -> dict:
+    """Look up a component by its ID (e.g. CM101A, ES249B, AR200A).
+
+    Returns the component's functional name, owner, family, and subsystem.
+    Use this when the user asks who owns a component ...
+    """
+    ...
 ```
 
-**Try:**
+**After:**
 ```python
-"""Fetch employee HR records by their badge number.
-..."""
+@mcp.tool()
+def fetch_hr_record(component_id: str) -> dict:
+    """Fetch employee HR records by their badge number."""
+    ...
 ```
 
-Save. In the **MCP Servers** panel, find `component-workshop` and click **Restart** so Copilot re-reads the tool list.
+The body doesn't change — the tool still works internally. It's just **misadvertised**.
 
-Now ask again in chat:
+Save. Restart `component-workshop` in the MCP Servers panel.
+
+**Before asking, click New Chat again** (kills Copilot's memory of your last successful answer).
+
+Ask:
 > **who owns component CM101A?**
 
-Copilot probably won't call your tool this time. The label now says "HR records / badge number", which has nothing to do with components. Copilot may say it doesn't have a way to answer, or reach for the wrong tool.
+Copilot has no tool that looks relevant. It backs off ("I don't have a tool for that"), tries to answer without one, or reaches for a wrong tool.
 
-Change the description back. Restart the server. Ask again. It works again.
+Revert the changes. Save. Restart. New Chat. Ask again. Original answer returns.
 
-**Lesson:** the description IS the interface for the AI. Write it for the AI, not for humans.
+**Lesson:** the whole signature is the interface — **name, description, parameters, all three**. Copilot picks tools by reading them together. Get any one badly wrong and your tool becomes invisible.
 
 ---
 
@@ -60,7 +71,7 @@ def find_component_by_family(family: str) -> list:
     # << your code — filter _load_components() by family >>
 ```
 
-Save. Restart `component-workshop` in the MCP Servers panel.
+Save. Restart `component-workshop` in the MCP Servers panel. Click **New Chat**.
 
 In chat:
 > **which components are in the Sensors family?**
@@ -81,3 +92,10 @@ python client.py
 ```
 
 That is a minimal stdio client: handshake → `list_tools` → `call_tool("lookup_component", "CM101A")` → prints the raw JSON. It is the same signal-trace flow you saw on the slides, in ~40 lines.
+
+---
+
+## Two rules to remember across both tasks
+
+1. **New Chat before every test.** Copilot remembers prior answers within a conversation.
+2. **Keep only `component-workshop` tools checked.** Otherwise Copilot may bypass your tool entirely and read files or grep the workspace.

@@ -29,7 +29,6 @@ That's the whole loop. The workshop tasks are edits to it — see `HANDS_ON.md`.
 - `HANDS_ON.md` — the two workshop tasks
 - `CHEAT_SHEET.md` — restarts, common errors, troubleshooting
 - `SOLUTION.md` — peek only if Copilot stalls
-- `PLAN.md` — session plan and decision log (mostly for the presenter)
 
 ## The mental model
 
