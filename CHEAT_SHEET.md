@@ -1,51 +1,53 @@
 # Cheat sheet
 
-## Restart after editing anything
+## Restart after editing `server.py`
 
-Just re-run:
+Copilot Chat holds a live connection to the running server. After you save an edit to `server.py`:
+
+1. Open the **MCP Servers** panel (from the Copilot Chat settings or `Ctrl+Shift+P` → "MCP: List Servers").
+2. Find `component-workshop`.
+3. Click **Restart**.
+
+Then re-ask your question in chat. Copilot will see the new tool list.
+
+## Copilot Chat doesn't see the `component-workshop` tools
+
+- Confirm the mode selector at the bottom of the Chat panel is **Agent**, not Ask / Edit.
+- Reload the window: `Ctrl+Shift+P` → **"Developer: Reload Window"**.
+- Open `.vscode/mcp.json` — it should have a `servers.component-workshop` block.
+- Check the MCP Servers panel for a red / errored status on `component-workshop`. Click it to see the log.
+
+## Server won't start (error in the MCP panel)
+
+Look at the server's stderr in the MCP Servers panel log. Usually one of:
+
+- `ModuleNotFoundError: No module named 'mcp'` → run `pip install -r requirements.txt`
+- `ModuleNotFoundError: No module named 'mcp.server.fastmcp'` → `mcp>=2.0` removed FastMCP; run `pip install --force-reinstall "mcp>=1.11,<2.0"`
+- `FileNotFoundError: components.csv` → the working directory is wrong. VS Code should launch from the repo root; if it doesn't, check `.vscode/mcp.json`.
+- Python syntax error → test the server alone in the terminal: `python server.py` (it should sit silently — stdio servers don't print). If you get a traceback, that's your bug.
+
+## Tool doesn't appear after adding it
+
+Almost always one of:
+
+- Missing `@mcp.tool()` decorator (with parentheses) above the function.
+- Forgot to restart `component-workshop` in the MCP Servers panel.
+
+## Tool call gets "Invalid arguments"
+
+Parameter names in your function signature must match what Copilot passes, case-sensitive. If your function is `def find_component_by_family(family: str)`, Copilot passes `{"family": "..."}`.
+
+## Editing in Codespaces
+
+- File tree on the left. Save with `Ctrl+S`.
+- Copilot suggestions in the editor appear as grey text — `Tab` to accept.
+
+## Optional: the `python client.py` fallback
+
+If Copilot Chat is having a bad day (network issue, tools panel stuck), you can still exercise the MCP loop from the terminal:
 
 ```bash
 python client.py
 ```
 
-`client.py` spawns a fresh server subprocess every run. There is nothing to kill first.
-
-## Common errors
-
-**`ModuleNotFoundError: No module named 'mcp'`**
-Run: `pip install -r requirements.txt`
-
-**`FileNotFoundError: components.csv`**
-Run from the project root (`/workspaces/mcp-workshop`), not from `data/`.
-
-**Client hangs and prints nothing**
-The server crashed at startup — usually a Python syntax error in `server.py`. Test the server alone:
-```bash
-python server.py
-```
-If you see a traceback, that's your bug. If it starts and sits silently, it's fine (stdio servers speak on stdin/stdout, not the terminal).
-
-**Tool doesn't appear in `[list_tools]` after adding it**
-Almost always a decorator typo. Confirm you have `@mcp.tool()` (with the parentheses) directly above the function.
-
-**Tool call returns an error like "Invalid arguments"**
-Parameter names in your function signature must match what `client.py` passes, case-sensitive. Example: `def find_component_by_family(family: str)` needs `{"family": "Sensors"}` in the call.
-
-## Editing files in Codespaces
-
-- Open from the left file explorer.
-- Save with `Ctrl+S`.
-- Copilot suggestions appear as grey text — press `Tab` to accept.
-
-## Optional: the MCP Inspector GUI
-
-We use `client.py` in the workshop because it's tiny and shows exactly what's on the wire. There is also a browser-based GUI, the **MCP Inspector**, worth knowing about after the workshop.
-
-On Codespaces it needs an extra env var because of DNS-rebinding protection in the Inspector proxy:
-
-```bash
-ALLOWED_ORIGINS="https://${CODESPACE_NAME}-6274.app.github.dev" \
-  npx @modelcontextprotocol/inspector python server.py
-```
-
-Then open port 6274 from the **PORTS** tab. If it still refuses to connect, that's a known Inspector v2.2 issue on Codespaces — the `python client.py` path always works.
+It does the handshake, lists tools, and calls `lookup_component("CM101A")` directly. No AI in the loop.

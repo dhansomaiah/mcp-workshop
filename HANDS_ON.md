@@ -1,41 +1,49 @@
 # Hands-on tasks
 
-Before you start: run `python client.py` once. You should see three sections:
+## Warm-up (~2 min) — make sure Copilot Chat sees our server
 
-- `[handshake]` — the client connected to the server
-- `[list_tools]` — the drawers the server exposes (name + first line of description)
-- `[call_tool]` — the JSON result of calling `lookup_component("CM101A")`
+1. Open the **Chat** panel on the right of your Codespace.
+2. Set the mode selector at the bottom to **Agent**.
+3. Click the **tools icon** in the chat input area. You should see two tools from `component-workshop`:
+   - `lookup_component`
+   - `list_ntcs_for_component`
+4. Ask Copilot in chat:
+   > **who owns component CM101A?**
 
-That's the entire MCP loop. Everything below is small edits to it.
+   Expected: Copilot calls `lookup_component` and answers with something like *"CM101A (MotAgCorrln) is owned by Dave Smith, in the Motor Control family, EPS subsystem."*
+
+That's the entire loop. The two tasks below are small edits to it.
 
 ---
 
 ## Task 1 — Relabel a drawer (~5 min)
 
-Every tool has a description string. It's what a client (including an AI) reads when deciding whether to call the tool. Look at what `[list_tools]` prints — that first line of each tool's description is the "label on the drawer."
+Every tool has a description string. Copilot reads it when deciding whether to call the tool. It is the label taped to the drawer.
 
-Open `server.py`. Find the description of `lookup_component`:
+Open `server.py`. Find the `lookup_component` function and change the **first line** of its docstring:
 
+**Before:**
 ```python
 """Look up a component by its ID (e.g. CM101A, ES249B, AR200A).
-
-Returns the component's functional name, owner, family, and subsystem.
 ..."""
 ```
 
-Change the **first line** to something totally unrelated:
-
+**Try:**
 ```python
-"""Fetch employee HR records by their badge number."""
+"""Fetch employee HR records by their badge number.
+..."""
 ```
 
-Save. Re-run `python client.py`.
+Save. In the **MCP Servers** panel, find `component-workshop` and click **Restart** so Copilot re-reads the tool list.
 
-Look at `[list_tools]` in the output. The label the client sees has changed.
+Now ask again in chat:
+> **who owns component CM101A?**
 
-If this were an AI client, it would now think this tool is about HR records — and would not call it when someone asked about `CM101A`. **The description IS the interface for the AI.**
+Copilot probably won't call your tool this time. The label now says "HR records / badge number", which has nothing to do with components. Copilot may say it doesn't have a way to answer, or reach for the wrong tool.
 
-Change it back before moving on.
+Change the description back. Restart the server. Ask again. It works again.
+
+**Lesson:** the description IS the interface for the AI. Write it for the AI, not for humans.
 
 ---
 
@@ -43,36 +51,33 @@ Change it back before moving on.
 
 Add a new tool to `server.py` called `find_component_by_family`. It should take a family name (`"Motor Control"`, `"Sensors"`, `"Arbitration"`, ...) and return every component in that family.
 
-The data is already loaded — see the `_load_components()` helper at the top of `server.py`.
-
-Copilot will do most of the typing. Structure to follow:
+The data helper is already there — see `_load_components()` at the top of `server.py`. Copilot will do most of the typing:
 
 ```python
 @mcp.tool()
 def find_component_by_family(family: str) -> list:
-    """<< write a description a future AI can act on >>"""
+    """<< write a description Copilot can act on >>"""
     # << your code — filter _load_components() by family >>
 ```
 
-Then open `client.py`. After the existing `lookup_component` call, add a second call for your new tool:
+Save. Restart `component-workshop` in the MCP Servers panel.
 
-```python
-print("\n[call_tool] find_component_by_family(family='Sensors')")
-result = await session.call_tool(
-    "find_component_by_family",
-    {"family": "Sensors"},
-)
-for block in result.content:
-    text = getattr(block, "text", str(block))
-    print(text)
-```
+In chat:
+> **which components are in the Sensors family?**
 
-Save both files, re-run `python client.py`. Your tool should show up in `[list_tools]` and return a list of Sensors components.
+Copilot should call your new tool and answer with `HwTqEstm`, `HwTqArbn`, `TorqRateLmt`.
 
-**Bonus if you finish early:** add one more tool that combines the two — given a family name, return every component AND its NTCs.
+**Bonus if you finish early:** add one more tool that combines the two — given a family name, return every component AND its NTCs. Then ask:
+> **what faults does the Sensors family cover?**
 
 ---
 
-## How to restart
+## Peek under the hood (optional)
 
-Just re-run `python client.py`. It re-spawns the server every time. There is no separate server process to stop.
+Curious what a tool call actually looks like on the wire, without any AI in the loop? Run:
+
+```bash
+python client.py
+```
+
+That is a minimal stdio client: handshake → `list_tools` → `call_tool("lookup_component", "CM101A")` → prints the raw JSON. It is the same signal-trace flow you saw on the slides, in ~40 lines.
