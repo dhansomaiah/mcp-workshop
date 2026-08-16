@@ -1,0 +1,21 @@
+id,name,owner,family,subsystem
+CM101A,MotAgCorrln,Priya Rao,Motor Control,EPS
+CM101B,MotAgArbn,Priya Rao,Motor Control,EPS
+CM620A,CtrldVelRtn,Sam Chen,Motor Control,EPS
+ES249A,HwTqEstm,Marta Silva,Sensors,EPS
+ES249B,HwTqArbn,Marta Silva,Sensors,EPS
+ES311A,TorqRateLmt,Hana Novak,Sensors,EPS
+AR200A,FordHwAgArbn,Aisha Khan,Arbitration,EPS
+AR200B,GmHwAgArbn,Aisha Khan,Arbitration,EPS
+AR305A,SnsrArbnPri,Leo Weber,Arbitration,Braking
+DG100A,DiagMonSensor,Yuki Tanaka,Diagnostics,EPS
+DG100B,DiagMonMotor,Yuki Tanaka,Diagnostics,EPS
+DG201A,FaultRespMgr,Ravi Patel,Diagnostics,Powertrain
+IO150A,CanRxHandler,Elena Popov,Communication,Gateway
+IO150B,CanTxHandler,Elena Popov,Communication,Gateway
+IO220A,LinRxHandler,Elena Popov,Communication,Gateway
+PW400A,VoltMonitor,Marco Rossi,Power,ECU
+PW400B,CurrLimiter,Marco Rossi,Power,ECU
+PW412A,TempDerating,Jin Park,Power,ECU
+SF500A,SafetyStateMc,Anna Schmidt,Safety,EPS
+SF500B,DegradedMode,Anna Schmidt,Safety,EPS
