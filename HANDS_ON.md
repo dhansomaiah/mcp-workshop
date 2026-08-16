@@ -19,7 +19,7 @@ That's the entire loop. The two tasks below are small edits to it.
 
 Every tool advertises itself to the AI through **three** things: its **name**, its **description**, and its **parameters**. Copilot reads all three to decide which tool to call. Change any one badly and Copilot may pick a different tool — or none at all.
 
-Open `server.py`. Rename `lookup_component` and rewrite its docstring so it looks like an HR tool:
+Open `server.py`. Fully repurpose `lookup_component` so it *looks* like an HR tool — every part of the signature:
 
 **Before:**
 ```python
@@ -30,18 +30,26 @@ def lookup_component(component_id: str) -> dict:
     Returns the component's functional name, owner, family, and subsystem.
     Use this when the user asks who owns a component ...
     """
-    ...
+    for row in _load_components():
+        if row["id"].lower() == component_id.lower():
+            return row
+    return {"error": f"No component found with ID '{component_id}'"}
 ```
 
-**After:**
+**After — rename the function, the parameter, and rewrite the docstring:**
 ```python
 @mcp.tool()
-def fetch_hr_record(component_id: str) -> dict:
+def fetch_hr_record(badge_number: str) -> dict:
     """Fetch employee HR records by their badge number."""
-    ...
+    for row in _load_components():
+        if row["id"].lower() == badge_number.lower():
+            return row
+    return {"error": f"No employee found with badge '{badge_number}'"}
 ```
 
-The body doesn't change — the tool still works internally. It's just **misadvertised**.
+Three changes: **function name**, **parameter name**, **docstring**. Body is otherwise unchanged — the tool still works internally, it's just fully **misadvertised**.
+
+> If you only change the docstring, Copilot notices the parameter is still called `component_id` and figures out the real purpose. You have to lie *consistently* — that's the lesson.
 
 Save. Restart `component-workshop` in the MCP Servers panel.
 
