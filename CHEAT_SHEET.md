@@ -1,16 +1,14 @@
 # Cheat sheet
 
-## Restart the server after editing `server.py`
+## Restart after editing anything
 
-Press `Ctrl+C` in the terminal running the Inspector, then re-run:
+Just re-run:
 
 ```bash
-npx @modelcontextprotocol/inspector python server.py
+python client.py
 ```
 
-## Reconnect the Inspector
-
-If the Inspector loses connection after a restart, click **Connect** in the top-left of its UI.
+`client.py` spawns a fresh server subprocess every run. There is nothing to kill first.
 
 ## Common errors
 
@@ -18,25 +16,36 @@ If the Inspector loses connection after a restart, click **Connect** in the top-
 Run: `pip install -r requirements.txt`
 
 **`FileNotFoundError: components.csv`**
-Run `python server.py` from the project root, not from `data/`.
+Run from the project root (`/workspaces/mcp-workshop`), not from `data/`.
 
-**Tool doesn't show up in the Inspector after adding it**
-Restart the server. The tool list is captured at the handshake, not live.
+**Client hangs and prints nothing**
+The server crashed at startup — usually a Python syntax error in `server.py`. Test the server alone:
+```bash
+python server.py
+```
+If you see a traceback, that's your bug. If it starts and sits silently, it's fine (stdio servers speak on stdin/stdout, not the terminal).
 
-**AI says "I don't have a tool for that"**
-The description string is what the AI reads. If it doesn't mention the concept the user asked about, the AI will not pick the tool. Rewrite the description.
+**Tool doesn't appear in `[list_tools]` after adding it**
+Almost always a decorator typo. Confirm you have `@mcp.tool()` (with the parentheses) directly above the function.
 
-**Codespace feels slow to boot**
-First boot on a fresh repo can take 60–90 seconds. Subsequent boots are ~10 seconds.
+**Tool call returns an error like "Invalid arguments"**
+Parameter names in your function signature must match what `client.py` passes, case-sensitive. Example: `def find_component_by_family(family: str)` needs `{"family": "Sensors"}` in the call.
 
-## MCP Inspector — where things are
+## Editing files in Codespaces
 
-- **Tool list:** left sidebar → **Tools** tab
-- **Call a tool:** click it, fill the form, hit **Call Tool**
-- **See the raw JSON going over the wire:** **History** tab at the bottom — this is your "signal trace"
-
-## Editing `server.py` in Codespaces
-
-- Open the file from the left file explorer.
+- Open from the left file explorer.
 - Save with `Ctrl+S`.
 - Copilot suggestions appear as grey text — press `Tab` to accept.
+
+## Optional: the MCP Inspector GUI
+
+We use `client.py` in the workshop because it's tiny and shows exactly what's on the wire. There is also a browser-based GUI, the **MCP Inspector**, worth knowing about after the workshop.
+
+On Codespaces it needs an extra env var because of DNS-rebinding protection in the Inspector proxy:
+
+```bash
+ALLOWED_ORIGINS="https://${CODESPACE_NAME}-6274.app.github.dev" \
+  npx @modelcontextprotocol/inspector python server.py
+```
+
+Then open port 6274 from the **PORTS** tab. If it still refuses to connect, that's a known Inspector v2.2 issue on Codespaces — the `python client.py` path always works.
