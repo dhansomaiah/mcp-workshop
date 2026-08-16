@@ -62,7 +62,23 @@ Revert the changes. Save. Restart. New Chat. Ask again. Original answer returns.
 
 Add a new tool to `server.py` called `find_component_by_family`. It should take a family name (`"Motor Control"`, `"Sensors"`, `"Arbitration"`, ...) and return every component in that family.
 
-The data helper is already there — see `_load_components()` at the top of `server.py`. Copilot will do most of the typing:
+**What the data looks like** (from `data/components.csv`, loaded by `_load_components()` at the top of `server.py`):
+
+```python
+_load_components()  # returns a list of dicts, one per row:
+[
+    {"id": "CM101A", "name": "MotAgCorrln",   "owner": "Dave Smith",     "family": "Motor Control", "subsystem": "EPS"},
+    {"id": "ES249A", "name": "HwTqEstm",      "owner": "Bob Brown",      "family": "Sensors",       "subsystem": "EPS"},
+    {"id": "AR200A", "name": "FordHwAgArbn",  "owner": "John Davis",     "family": "Arbitration",   "subsystem": "EPS"},
+    # ...20 rows total
+]
+```
+
+Available `family` values in the data: **Motor Control**, **Sensors**, **Arbitration**, **Diagnostics**, **Communication**, **Power**, **Safety**.
+
+You can open `data/components.csv` in the editor at any time to peek at all 20 rows.
+
+Copilot will do most of the typing:
 
 ```python
 @mcp.tool()
